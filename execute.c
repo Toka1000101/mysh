@@ -77,6 +77,9 @@ void execute_with_redirection(char **args) {
 	if (clean_args[0] == NULL)
 		exit(EXIT_SUCCESS);
 
+	if (handle_builtin(clean_args) != BUILTIN_NONE)
+		exit(EXIT_SUCCESS);
+
 	execvp(clean_args[0], clean_args);
 	fprintf(stderr, "mysh: %s: %s\n", clean_args[0], strerror(errno));
 	exit(EXIT_FAILURE);

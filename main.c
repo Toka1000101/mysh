@@ -54,14 +54,6 @@ int main(void) {
 		if (args[0] == NULL)
 			continue;
 
-		builtin_status = handle_builtin(args);
-		if (builtin_status == BUILTIN_EXIT) {
-			free(line);
-			exit(0);
-		}
-		if (builtin_status == BUILTIN_HANDLED)
-			continue;
-
 		for (int j = 0; args[j] != NULL; j++) {
 			if (strcmp(args[j], "|") == 0) {
 				pipe_count++;
@@ -76,23 +68,31 @@ int main(void) {
 
 		if (pipe_count == 1) {
 			execute_pipeline(args, pipe_idx);
+			continue;
+		}
+
+		builtin_status = handle_builtin(args);
+		if (builtin_status == BUILTIN_EXIT) {
+			free(line);
+			exit(0);
+		}
+		if (builtin_status == BUILTIN_HANDLED) continue;
+
+		pid_t pid = fork();
+
+		if (pid < 0) {
+			perror("mysh: fork failed");
+		} else if (pid == 0) {
+			struct sigaction sa_child;
+
+			sa_child.sa_handler = SIG_DFL;
+			sigemptyset(&sa_child.sa_mask);
+			sa_child.sa_flags = 0;
+			sigaction(SIGINT, &sa_child, NULL);
+			execute_with_redirection(args);
 		} else {
-			pid_t pid = fork();
-
-			if (pid < 0) {
-				perror("mysh: fork failed");
-			} else if (pid == 0) {
-				struct sigaction sa_child;
-
-				sa_child.sa_handler = SIG_DFL;
-				sigemptyset(&sa_child.sa_mask);
-				sa_child.sa_flags = 0;
-				sigaction(SIGINT, &sa_child, NULL);
-				execute_with_redirection(args);
-			} else {
-				int status;
-				waitpid(pid, &status, 0);
-			}
+			int status;
+			waitpid(pid, &status, 0);
 		}
 	}
 

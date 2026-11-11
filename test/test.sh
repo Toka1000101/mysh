@@ -74,6 +74,11 @@ printf 'marker\n' > "$TMP/subdir/marker.txt"
 out="$(printf 'cd '"$TMP/subdir"$'\ncat marker.txt\nexit\n' | "$MYSH" 2>"$TMP/err")"
 assert_contains "cd builtin affects subsequent command" "marker" "$out"
 
+# A builtin used as a pipeline stage must run in that child; the other
+# stage must still execute (regression: cd .. | ls skipped ls).
+out="$(printf 'cd .. | echo pipeline_after_builtin\nexit\n' | "$MYSH" 2>"$TMP/err")"
+assert_contains "builtin in pipe does not skip other stage" "pipeline_after_builtin" "$out"
+
 printf 'cd\nexit\n' | "$MYSH" >"$TMP/stdout" 2>"$TMP/err"
 assert_contains "cd missing argument to stderr" "mysh: cd: missing argument" "$(cat "$TMP/err")"
 

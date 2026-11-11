@@ -85,6 +85,16 @@ mysh> echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62
 mysh>
 =======================================================================================================
+3) pipe with built-in 'cd', because 'handle_builtin' runs before pipe check.
+In this case mysh will run built-in command and silantly ignore pipe.
+=======================================================================================================
+mysh> pwd
+/home/toka/Desktop/fall2026/unix-prog/assignments/midterm-project/mysh
+mysh> cd .. | ls
+mysh> pwd
+/home/toka/Desktop/fall2026/unix-prog/assignments/midterm-project
+mysh>
+=======================================================================================================
 
 Why 64? 64 is completely arbitrary, since program itself is simple and there is no requirement for this, I decide to make implementation simple and small.
 
@@ -144,3 +154,14 @@ PASS: pipeline does not hang; shell continues
 
 Results: 19 passed, 0 failed
 =======================================================================================================
+
+WHY CD HAD TO BE BUILT-IN:
+Because for external commands mysh creates child process, and it will change child directory
+and parent direcoty 'mysh' will be unchagned, here is what would happen if 'cd' were external:
+
+1) shell forks child process
+2) child process runs /bin/cd 'foldername'
+3) child will make system call 'chdir'
+4) child process changes its own directory
+5) child process finishes and exits
+6) control returns to parent process and direcoty will be unchanged

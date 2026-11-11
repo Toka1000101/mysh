@@ -1,6 +1,0 @@
-apple
-fig
-apple
-pear
-apple
-pear
